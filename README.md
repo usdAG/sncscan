@@ -35,12 +35,15 @@ sncscan --route-string /H/10.3.161.5/S/3299/H/10.3.161.3/S/3200 -p diag
 ###
 
 # Install
-Requirements: Currently the sncscan only works with python3.8 and the pysap libary from our fork (URL). 
+Requirements: Currently the sncscan only works with python3.8 and the pysap libary from our fork. 
 
-1. Download the pysap version from our fork
-2. ```$ python3.8 -m pip install -r requirements.txt```
-2. ```$ setup.py test```
-3. ```$ setup.py install```
+```$ python3.8 -m pip install -r requirements.txt```
+
+or
+
+```$ python3.8 setup.py test```
+
+```$ python3.8 setup.py install```
 
 
 # Background: SNC system parameters
