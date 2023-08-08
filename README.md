@@ -1,4 +1,5 @@
 # sncscan
+Tool for analyzing SAP SNC Communication Security.
 
 ![](images/sncscan.png)
 
