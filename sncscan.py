@@ -247,7 +247,7 @@ class SNCSecurityScan(object):
                     connection2 = SAPDiagConnection(target.host, target.port, route=target.route_string,
                                                     init=False)
                     response = self.check_encrypted_gui(connection2)
-                    result.enforced = 'Unencrypted communication is rejected by this system' in str(response.payload)
+                    result.enforced = response["SAPDiag"].err_no == 1
                 except Exception as e:
                     # Need to change after python3, an compression error is thrown but python2 can't handle it.
                     logging.info(traceback.format_exc())
