@@ -44,6 +44,7 @@ conf.verb = 0
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 colors = None
 
+
 class TerminalColors(object):
 
     def __init__(self, color=True):
@@ -57,6 +58,7 @@ class TerminalColors(object):
         else:
             self.BLUE = self.CYAN = self.GREEN = self.ORANGE = self.RED = self.END = ""
 
+
 class SNCScanTarget(object):
     def __init__(self, host, port, route_string, protocol):
         self.host = host
@@ -64,9 +66,8 @@ class SNCScanTarget(object):
         self.route_string = route_string
         self.protocol = protocol
 
-
     def __str__(self):
-        if(self.route_string):
+        if (self.route_string):
             return f'{self.route_string}'
         else:
             return f'/H/{self.host}/S/{self.port}'
@@ -77,29 +78,30 @@ class SNCSecurityScan(object):
     def __init__(self, target):
         self.target = target
 
-
     def scan(self):
-        if(self.target.protocol == "diag"):
+        if (self.target.protocol == "diag"):
             return self.scan_diag(self.target)
-        elif(self.target.protocol == "router"):
+        elif (self.target.protocol == "router"):
             return self.scan_router(self.target)
         else:
             logging.info("Unknown protocol")
-            return SNCScanResult(self,"",False,False,"","", False)
+            return SNCScanResult(self, "", False, False, "", "", False)
 
     # sncscan for the SAPROUTER protocol
     def scan_router(self, target):
         logging.info(colors.BLUE + datetime.today().ctime() + colors.END)
         if (target.host):
-            logging.info(colors.BLUE + 'scanning host: {}'.format(str(target)) + colors.END)
+            logging.info(
+                colors.BLUE + 'scanning host: {}'.format(str(target)) + colors.END)
         try:
             # Establish NI connection
-            result = SNCScanResult(self, "",False, False, "", "", False)
+            result = SNCScanResult(self, "", False, False, "", "", False)
             conn = SAPRoutedStreamSocket.get_nisocket(target.host,
                                                       target.port,
                                                       target.route_string)
 
-            logging.info(colors.BLUE + "connect to server o.k.\n\n" + colors.END)
+            logging.info(
+                colors.BLUE + "connect to server o.k.\n\n" + colors.END)
             # Valid snc token
             snc_token = b"\x30\x82\x00\x61\x06\x06\x2b\x24\x03\x01\x25\x01\xa0\x82\x00\x55" \
                         b"\xa1\x53\x04\x15\x04\x01\x01\x01\x00\x02\x01\x03\x02\x01\x02\x02" \
@@ -141,7 +143,8 @@ class SNCSecurityScan(object):
             response.decode_payload_as(SAPSNCFrame)
             if response[SAPSNCFrame].frame_type == 4:
                 result.enabled = True
-                result.mechid = snc_mech_id_values.get(response[SAPSNCFrame].mech_id)
+                result.mechid = snc_mech_id_values.get(
+                    response[SAPSNCFrame].mech_id)
                 result.qop_flag = response[SAPSNCFrame].flags
                 result.cryptolib = response[SAPSNCFrame].data.decode('utf8')
             else:
@@ -149,7 +152,8 @@ class SNCSecurityScan(object):
                 response.decode_payload_as(SAPRouter)
                 error_information_text = response.err_text_value
                 error_information_text.decode_payload_as(SAPRouterError)
-                logging.info(colors.RED + error_information_text.error.decode('utf-8') + colors.END)
+                logging.info(
+                    colors.RED + error_information_text.error.decode('utf-8') + colors.END)
             result.done = True
             conn.close()
             return result
@@ -157,7 +161,7 @@ class SNCSecurityScan(object):
             logging.info(colors.RED + "Connection error" + colors.END)
         except KeyboardInterrupt:
             logging.info("Cancelled by the user")
-        return SNCScanResult(self,"",False,False,"","", False)
+        return SNCScanResult(self, "", False, False, "", "", False)
 
     # Initiate snc connection
     def sncinit(self, connection, sncframe):
@@ -165,8 +169,8 @@ class SNCSecurityScan(object):
         return connection.sr(SAPDiagDP(rq_id=0, terminal="sncscan") /
                              SAPDiag(com_flag_TERM_INI=1, compress=2, snc_frame=sncframe))
 
-
     # Try to connect to the SAPGUI via DIAG
+
     def check_encrypted_gui(self, connection):
         connection.connect()
 
@@ -179,7 +183,8 @@ class SNCSecurityScan(object):
                                     item_id=0x04,
                                     item_sid=0x0b,
                                     item_value=SAPDiagSupportBits(
-                                        unhex("ff7ffa0d78b737def6196e9325bf1593ef73feebdb5501000000000000000000")
+                                        unhex(
+                                            "ff7ffa0d78b737def6196e9325bf1593ef73feebdb5501000000000000000000")
                                     ))
 
         return connection.sr(SAPDiagDP(terminal=connection.terminal, rq_id=0) /
@@ -194,11 +199,13 @@ class SNCSecurityScan(object):
         :param options: option set from the command line
         :type options: Values
         """
-        logging.info(colors.BLUE + datetime.today().ctime() + colors.END) 
+        logging.info(colors.BLUE + datetime.today().ctime() + colors.END)
         if (target.host):
-            logging.info(colors.BLUE + 'scanning host: {} {}'.format(target.host, target.port) + colors.END)
+            logging.info(
+                colors.BLUE + 'scanning host: {} {}'.format(target.host, target.port) + colors.END)
         else:
-            logging.info(colors.BLUE + 'scanning host: {}'.format(target.route_string) + colors.END)
+            logging.info(
+                colors.BLUE + 'scanning host: {}'.format(target.route_string) + colors.END)
         try:
             result = SNCScanResult(self, "", False, False, "", "", False)
             # valid snctoken
@@ -232,13 +239,15 @@ class SNCSecurityScan(object):
                                            init=False)
             # initiate SNC connection
             response = self.sncinit(connection, frame_snc)
-            logging.info(colors.BLUE + "connect to server o.k.\n\n" + colors.END)
+            logging.info(
+                colors.BLUE + "connect to server o.k.\n\n" + colors.END)
 
             # decode response and parse output
             response.payload.decode_payload_as(SAPSNCFrame)
             if response[SAPSNCFrame].frame_type == 4:
                 result.enabled = True
-                result.mechid = snc_mech_id_values.get(response[SAPSNCFrame].mech_id)
+                result.mechid = snc_mech_id_values.get(
+                    response[SAPSNCFrame].mech_id)
                 result.qop_flag = response[SAPSNCFrame].flags
                 result.cryptolib = response[SAPSNCFrame].data.decode('utf8')
 
@@ -254,7 +263,8 @@ class SNCSecurityScan(object):
 
             else:
                 response.payload.decode_payload_as(SAPDiag)
-                logging.info(colors.RED + 'Error: {}'.format(response[SAPDiag].info) + colors.END)
+                logging.info(
+                    colors.RED + 'Error: {}'.format(response[SAPDiag].info) + colors.END)
                 if 'Security Network Layer (SNC) error' in response[SAPDiag].info:
                     result.enabled = False
             result.done = True
@@ -279,17 +289,17 @@ class SNCScanResult(object):
         self.done = done
 
     def parse_qop(self):
-        return (self.qop_flag & 0b1100000) >>5, (self.qop_flag & 0b0011000) >>3, (self.qop_flag & 0b0000110) >>1
+        return (self.qop_flag & 0b1100000) >> 5, (self.qop_flag & 0b0011000) >> 3, (self.qop_flag & 0b0000110) >> 1
         try:
-            return (self.qop_flag & 0b1100000) >>5, (self.qop_flag & 0b0011000) >>3, (self.qop_flag & 0b0000110) >>1
+            return (self.qop_flag & 0b1100000) >> 5, (self.qop_flag & 0b0011000) >> 3, (self.qop_flag & 0b0000110) >> 1
         except:
-            return 0,0,0
+            return 0, 0, 0
 
     def format_json(self):
-        if(self.scan.target.protocol == "router"):
-            return json.dumps({"target":str(self.scan.target),"qop_use":self.qop_use,"qop_max":self.qop_max,"qop_min":self.qop_min,"enabled":self.enabled,"mechid":self.mechid,"cryptolib":self.cryptolib,"done":self.done})
+        if (self.scan.target.protocol == "router"):
+            return json.dumps({"target": str(self.scan.target), "qop_use": self.qop_use, "qop_max": self.qop_max, "qop_min": self.qop_min, "enabled": self.enabled, "mechid": self.mechid, "cryptolib": self.cryptolib, "done": self.done})
         else:
-            return json.dumps({"target":str(self.scan.target),"qop_use":self.qop_use,"qop_max":self.qop_max,"qop_min":self.qop_min,"enabled":self.enabled, "enforced":self.enforced,"mechid":self.mechid,"cryptolib":self.cryptolib,"done":self.done})
+            return json.dumps({"target": str(self.scan.target), "qop_use": self.qop_use, "qop_max": self.qop_max, "qop_min": self.qop_min, "enabled": self.enabled, "enforced": self.enforced, "mechid": self.mechid, "cryptolib": self.cryptolib, "done": self.done})
 
     def format_only_violations(self):
         if not self.enabled:
@@ -297,17 +307,16 @@ class SNCScanResult(object):
             output += f"SNC enabled system (snc/enabled): {colors.RED}{int(self.enabled)} (no){colors.END}\n"
         else:
             output = f"Target: {self.scan.target}\n"
-            if(self.qop_flag != 0x7e):
+            if (self.qop_flag != 0x7e):
                 output += f"Flag: {colors.RED+hex(self.qop_flag)+colors.END}\n"
             output += "Quality of Protection\n"
-            for parameter,value in [("use",self.qop_use),("max",self.qop_max),("min",self.qop_min)]:
-                if(value != 3):
+            for parameter, value in [("use", self.qop_use), ("max", self.qop_max), ("min", self.qop_min)]:
+                if (value != 3):
                     output += f"\tsnc/data_protection/{parameter}\t{colors.RED}{value} ({snc_qop.get(value)}){colors.END}\n"
             if self.scan.target.protocol == "diag" and not self.enforced:
                 output += f"\nUnencrypted communication is allowed by this system:\n"
                 output += f"snc/only_encrypted_gui\t{colors.RED}0 (False){colors.END}\n"
         return output
-
 
     def format_pretty(self):
         if not self.enabled:
@@ -318,12 +327,12 @@ class SNCScanResult(object):
             output += f"SNC enabled system (snc/enabled): {colors.GREEN}{int(self.enabled)} (yes){colors.END}\n"
             output += f"MechID: {self.mechid}\n"
             output += f"Used Cryptolib: {self.cryptolib}\n"
-            if(self.qop_flag == 0x7e):
+            if (self.qop_flag == 0x7e):
                 output += f"Flag: {colors.GREEN+hex(self.qop_flag)+colors.END}\n"
             else:
                 output += f"Flag: {colors.RED+hex(self.qop_flag)+colors.END}\n"
             output += "Quality of Protection\n"
-            for parameter,value in [("use",self.qop_use),("max",self.qop_max),("min",self.qop_min)]:
+            for parameter, value in [("use", self.qop_use), ("max", self.qop_max), ("min", self.qop_min)]:
                 output += f"\tsnc/data_protection/{parameter}\t{colors.GREEN if value == 3 else colors.RED}{value} ({snc_qop.get(value)}){colors.END}\n"
 
             if self.scan.target.protocol == "diag":
@@ -336,21 +345,24 @@ class SNCScanResult(object):
             print(f"Target:{str(self.scan.target)} - scan unsuccessful.")
             return
         self.qop_use, self.qop_max, self.qop_min = self.parse_qop()
-        if(format == "pretty"):
+        if (format == "pretty"):
             print(self.format_pretty())
-        elif(format == "plain"):
-            if(self.scan.target.protocol == "router"):
-                print(f"Target:{str(self.scan.target)} QoP:{hex(self.qop_flag)} Enabled:{self.enabled} MechID:{self.mechid} CryptoLib:{self.cryptolib} Done:{self.done}")
+        elif (format == "plain"):
+            if (self.scan.target.protocol == "router"):
+                print(
+                    f"Target:{str(self.scan.target)} QoP:{hex(self.qop_flag)} Enabled:{self.enabled} MechID:{self.mechid} CryptoLib:{self.cryptolib} Done:{self.done}")
             else:
                 print(f"Target:{str(self.scan.target)} QoP:{hex(self.qop_flag)} Enabled:{self.enabled} Enforced:{self.enforced} MechID:{self.mechid} CryptoLib:{self.cryptolib} Done:{self.done}")
-        elif(format=="json"):
+        elif (format == "json"):
             print(self.format_json())
-        elif(format=="only_violations"):
+        elif (format == "only_violations"):
             print(self.format_only_violations())
 
 # Command line options parser
+
+
 def parse_options():
-    global colors 
+    global colors
     colors = TerminalColors(True)
 
     description = f'{ascii_art()}\nSAP Secure Network Communication analysis tool developed by usd AG {colors.ORANGE}\u25e5{colors.END} \nBased on the pysap library by Martin Gallo.'
@@ -359,22 +371,32 @@ def parse_options():
     usage += "\n\t%(prog)s --route-string </H/S/H/S/> -p <diag|router> [-o <file>] [-v][-q][--no-color][-f <format]"
     usage += "\n\t%(prog)s -L <list of hosts>|-iL <list of hosts in file> [-o <file>] [-v][-q][--no-color][-f <format]"
 
-    parser = ArgumentParser(usage=usage, description=description, formatter_class=RawTextHelpFormatter)
+    parser = ArgumentParser(
+        usage=usage, description=description, formatter_class=RawTextHelpFormatter)
 
     target = parser.add_argument_group("Target")
     target.add_argument("-H", "--host", dest="host", help="Host")
     target.add_argument("-S", "--port", dest="port", type=int, default=3299,
                         help="Port [%(default)d]")
-    target.add_argument("--route-string", dest="route_string", help="Format: /H/first-IP/S/Port/H/second-IP/S/Port")
+    target.add_argument("--route-string", dest="route_string",
+                        help="Format: /H/first-IP/S/Port/H/second-IP/S/Port")
     misc = parser.add_argument_group("Misc options")
-    misc.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Verbose output")
-    misc.add_argument("-p", "--protocol", dest="protocol", help="Protocol (diag/router)")
-    misc.add_argument("-o", "--output", dest="file_output", help="Print output to text file")
-    misc.add_argument("-f", "--format", dest="format", default="pretty", help="Format for output")
-    misc.add_argument("-L", "--list", dest="list", help="List of multiple DIAG targets, in routestring format and comma seperated")
-    misc.add_argument("-iL", "--listfile", dest="listfile", help="List of multiple DIAG targets, in routestring format and comma seperated, stored in a file")
-    misc.add_argument("--no-color", dest="color", action="store_false", help="Disable colors in output.")
-    misc.add_argument("-q", dest="quiet", action="store_true", help="Disable scan status information output.")
+    misc.add_argument("-v", "--verbose", dest="verbose",
+                      action="store_true", help="Verbose output")
+    misc.add_argument("-p", "--protocol", dest="protocol",
+                      help="Protocol (diag/router)")
+    misc.add_argument("-o", "--output", dest="file_output",
+                      help="Print output to text file")
+    misc.add_argument("-f", "--format", dest="format",
+                      default="pretty", help="Format for output")
+    misc.add_argument("-L", "--list", dest="list",
+                      help="List of multiple DIAG targets, in routestring format and comma seperated")
+    misc.add_argument("-iL", "--listfile", dest="listfile",
+                      help="List of multiple DIAG targets, in routestring format and comma seperated, stored in a file")
+    misc.add_argument("--no-color", dest="color",
+                      action="store_false", help="Disable colors in output.")
+    misc.add_argument("-q", dest="quiet", action="store_true",
+                      help="Disable scan status information output.")
 
     options = parser.parse_args()
 
@@ -389,15 +411,16 @@ def parse_options():
 
 def ascii_art():
     return colors.CYAN + ' ___ _ __   ___ ___  ___ __ _ _ __\n' \
-    '/ __| \'_ \ / __/ __|/ __/ _` | \'_ \ \n' \
-    '\__ \ | | | (__\__ \ (_| (_| | | | |\n' \
-    '|___/_| |_|\___|___/\___\__,_|_| |_|\n' + colors.END \
+        '/ __| \'_ \ / __/ __|/ __/ _` | \'_ \ \n' \
+        '\__ \ | | | (__\__ \ (_| (_| | | | |\n' \
+        '|___/_| |_|\___|___/\___\__,_|_| |_|\n' + colors.END \
 
 
 # Main function
+
+
 def main():
     options = parse_options()
-
 
     if not options.quiet:
         print(ascii_art())
@@ -414,24 +437,27 @@ def main():
     if options.list or options.listfile:
         targetlist = ""
         if options.listfile:
-            with open(options.listfile,"r") as file:
-                targetlist = file.read().replace("\n",",")
+            with open(options.listfile, "r") as file:
+                targetlist = file.read().replace("\n", ",")
                 targetlist = targetlist[:-1] if targetlist[-1] == ',' else targetlist
         else:
-                targetlist = options.list
+            targetlist = options.list
         for target in targetlist.split(","):
-            if(options.format == "pretty"):
+            if (options.format == "pretty"):
                 print(70*"-")
-            if(len(target.split("H"))>2):
-                result = SNCSecurityScan(SNCScanTarget(None, None, target, "diag")).scan()
+            if (len(target.split("H")) > 2):
+                result = SNCSecurityScan(SNCScanTarget(
+                    None, None, target, "diag")).scan()
                 result.output(options.format)
             else:
                 host = target.split("/")[2]
                 port = target.split("/")[4]
-                result = SNCSecurityScan(SNCScanTarget(host, port, None, "diag")).scan()
+                result = SNCSecurityScan(SNCScanTarget(
+                    host, port, None, "diag")).scan()
                 result.output(options.format)
     else:
-        result = SNCSecurityScan(SNCScanTarget(options.host, options.port, options.route_string, options.protocol)).scan()
+        result = SNCSecurityScan(SNCScanTarget(
+            options.host, options.port, options.route_string, options.protocol)).scan()
         result.output(options.format)
 
 
