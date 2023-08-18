@@ -1,4 +1,4 @@
-![](snclogo_header.png)
+![](images/snclogo_header.png)
 
 
 # sncscan
