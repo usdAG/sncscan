@@ -52,7 +52,7 @@ class TerminalColors(object):
             self.BLUE = '\033[94m'
             self.CYAN = '\033[96m'
             self.GREEN = '\033[92m'
-            self.ORANGE = '\033[93m'
+            self.ORANGE = '\x1b[38;2;240;127;29m'
             self.RED = '\033[91m'
             self.END = '\033[0m'
         else:
@@ -263,10 +263,11 @@ class SNCSecurityScan(object):
 
             else:
                 response.payload.decode_payload_as(SAPDiag)
-                logging.info(
-                    colors.RED + 'Error: {}'.format(response[SAPDiag].info) + colors.END)
-                if 'Security Network Layer (SNC) error' in response[SAPDiag].info:
+                if 'SNC' in response[SAPDiag].info:
                     result.enabled = False
+                else:
+                    logging.info(
+                        colors.RED + 'Error: {}'.format(response[SAPDiag].info) + colors.END)
             result.done = True
             return result
 
@@ -297,9 +298,13 @@ class SNCScanResult(object):
 
     def format_json(self):
         if (self.scan.target.protocol == "router"):
-            return json.dumps({"target": str(self.scan.target), "qop_use": self.qop_use, "qop_max": self.qop_max, "qop_min": self.qop_min, "enabled": self.enabled, "mechid": self.mechid, "cryptolib": self.cryptolib, "done": self.done})
+            return json.dumps({"target": str(self.scan.target), "qop_use": self.qop_use, "qop_max": self.qop_max,
+                               "qop_min": self.qop_min, "enabled": self.enabled, "mechid": self.mechid,
+                               "cryptolib": self.cryptolib, "done": self.done})
         else:
-            return json.dumps({"target": str(self.scan.target), "qop_use": self.qop_use, "qop_max": self.qop_max, "qop_min": self.qop_min, "enabled": self.enabled, "enforced": self.enforced, "mechid": self.mechid, "cryptolib": self.cryptolib, "done": self.done})
+            return json.dumps({"target": str(self.scan.target), "qop_use": self.qop_use, "qop_max": self.qop_max,
+                               "qop_min": self.qop_min, "enabled": self.enabled, "enforced": self.enforced,
+                               "mechid": self.mechid, "cryptolib": self.cryptolib, "done": self.done})
 
     def format_only_violations(self):
         if not self.enabled:
@@ -308,7 +313,7 @@ class SNCScanResult(object):
         else:
             output = f"Target: {self.scan.target}\n"
             if (self.qop_flag != 0x7e):
-                output += f"Flag: {colors.RED+hex(self.qop_flag)+colors.END}\n"
+                output += f"Flag: {colors.RED + hex(self.qop_flag) + colors.END}\n"
             output += "Quality of Protection\n"
             for parameter, value in [("use", self.qop_use), ("max", self.qop_max), ("min", self.qop_min)]:
                 if (value != 3):
@@ -328,9 +333,9 @@ class SNCScanResult(object):
             output += f"MechID: {self.mechid}\n"
             output += f"Used Cryptolib: {self.cryptolib}\n"
             if (self.qop_flag == 0x7e):
-                output += f"Flag: {colors.GREEN+hex(self.qop_flag)+colors.END}\n"
+                output += f"Flag: {colors.GREEN + hex(self.qop_flag) + colors.END}\n"
             else:
-                output += f"Flag: {colors.RED+hex(self.qop_flag)+colors.END}\n"
+                output += f"Flag: {colors.RED + hex(self.qop_flag) + colors.END}\n"
             output += "Quality of Protection\n"
             for parameter, value in [("use", self.qop_use), ("max", self.qop_max), ("min", self.qop_min)]:
                 output += f"\tsnc/data_protection/{parameter}\t{colors.GREEN if value == 3 else colors.RED}{value} ({snc_qop.get(value)}){colors.END}\n"
@@ -352,11 +357,13 @@ class SNCScanResult(object):
                 print(
                     f"Target:{str(self.scan.target)} QoP:{hex(self.qop_flag)} Enabled:{self.enabled} MechID:{self.mechid} CryptoLib:{self.cryptolib} Done:{self.done}")
             else:
-                print(f"Target:{str(self.scan.target)} QoP:{hex(self.qop_flag)} Enabled:{self.enabled} Enforced:{self.enforced} MechID:{self.mechid} CryptoLib:{self.cryptolib} Done:{self.done}")
+                print(
+                    f"Target:{str(self.scan.target)} QoP:{hex(self.qop_flag)} Enabled:{self.enabled} Enforced:{self.enforced} MechID:{self.mechid} CryptoLib:{self.cryptolib} Done:{self.done}")
         elif (format == "json"):
             print(self.format_json())
         elif (format == "only_violations"):
             print(self.format_only_violations())
+
 
 # Command line options parser
 
@@ -380,19 +387,19 @@ def parse_options():
                         help="Port [%(default)d]")
     target.add_argument("--route-string", dest="route_string",
                         help="Format: /H/first-IP/S/Port/H/second-IP/S/Port")
+    target.add_argument("-L", "--list", dest="list",
+                      help="List of multiple DIAG targets, in routestring format and comma seperated")
+    target.add_argument("-iL", "--listfile", dest="listfile",
+                      help="List of multiple DIAG targets, in routestring format and comma seperated, stored in a file")
+    target.add_argument("-p", "--protocol", dest="protocol",
+                      help="Protocol (diag/router)")
     misc = parser.add_argument_group("Misc options")
     misc.add_argument("-v", "--verbose", dest="verbose",
                       action="store_true", help="Verbose output")
-    misc.add_argument("-p", "--protocol", dest="protocol",
-                      help="Protocol (diag/router)")
     misc.add_argument("-o", "--output", dest="file_output",
                       help="Print output to text file")
     misc.add_argument("-f", "--format", dest="format",
                       default="pretty", help="Format for output")
-    misc.add_argument("-L", "--list", dest="list",
-                      help="List of multiple DIAG targets, in routestring format and comma seperated")
-    misc.add_argument("-iL", "--listfile", dest="listfile",
-                      help="List of multiple DIAG targets, in routestring format and comma seperated, stored in a file")
     misc.add_argument("--no-color", dest="color",
                       action="store_false", help="Disable colors in output.")
     misc.add_argument("-q", dest="quiet", action="store_true",
@@ -411,11 +418,11 @@ def parse_options():
 
 def ascii_art():
     return colors.CYAN + ' ___ _ __   ___ ___  ___ __ _ _ __\n' \
-        '/ __| \'_ \ / __/ __|/ __/ _` | \'_ \ \n' \
-        '\__ \ | | | (__\__ \ (_| (_| | | | |\n' \
-        '|___/_| |_|\___|___/\___\__,_|_| |_|\n' + colors.END \
-
-
+                         '/ __| \'_ \ / __/ __|/ __/ _` | \'_ \ \n' \
+                         '\__ \ | | | (__\__ \ (_| (_| | | | |\n' \
+                         '|___/_| |_|\___|___/\___\__,_|_| |_|\n' + colors.END \
+ \
+ \
 # Main function
 
 
@@ -444,7 +451,7 @@ def main():
             targetlist = options.list
         for target in targetlist.split(","):
             if (options.format == "pretty"):
-                print(70*"-")
+                print(70 * "-")
             if (len(target.split("H")) > 2):
                 result = SNCSecurityScan(SNCScanTarget(
                     None, None, target, "diag")).scan()
