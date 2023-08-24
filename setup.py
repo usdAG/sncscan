@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='sncscan',
-    version='0.9',
+    version='1.0.0',
     packages=[''],
     url='https://github.com/usdAG/sncscan',
     license='GPLv3',
