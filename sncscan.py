@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3
 # encoding: utf-8
 # sncscan - scanner of SNC configurations for routers and SAP systems
 #
