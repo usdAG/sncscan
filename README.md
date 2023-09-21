@@ -17,7 +17,7 @@ SAP Routers can either support SNC or not, a more granular configuration of the 
 Nevertheless, `sncscan` find out if it is activated:
 
 ```
-sncscan -H 10.3.161.4 -S 3299-p router
+sncscan -H 10.3.161.4 -S 3299 -p router
 ```
 
 
