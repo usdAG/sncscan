@@ -41,10 +41,20 @@ from pysap.SAPSNC import SAPSNCFrame, snc_qop, snc_mech_id_values
 
 # Set the verbosity to 0
 conf.verb = 0
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+
 colors = None
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
+h1 = logging.StreamHandler(sys.stdout)
+h1.setLevel(logging.DEBUG)
+h1.addFilter(lambda record: record.levelno <= logging.INFO)
+h2 = logging.StreamHandler()
+h2.setLevel(logging.WARNING)
 
+logger.addHandler(h1)
+logger.addHandler(h2)
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 class TerminalColors(object):
 
     def __init__(self, color=True):
